@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 import os
 
 # Load environment variables from .env file
@@ -16,4 +17,10 @@ llm_local = ChatOpenAI(
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 llm_open_router = ChatOpenAI(
     api_key=OPENROUTER_API_KEY, openai_api_base="https://openrouter.ai/api/v1/"
+)
+
+# Hugging Face Inference API
+HUGGING_FACE_API_KEY = os.environ.get("HUGGING_FACE_API_KEY")
+hf_embeddings = HuggingFaceInferenceAPIEmbeddings(
+    api_key=HUGGING_FACE_API_KEY, model_name="sentence-transformers/all-MiniLM-l6-v2"
 )
