@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gais-lab"
+name = "app"
 version = "0.1.0"
 description = ""
 authors = ["Raymond Yeh <ray@geek.sg>"]
