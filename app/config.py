@@ -24,3 +24,6 @@ HUGGING_FACE_API_KEY = os.environ.get("HUGGING_FACE_API_KEY")
 hf_embeddings = HuggingFaceInferenceAPIEmbeddings(
     api_key=HUGGING_FACE_API_KEY, model_name="sentence-transformers/all-MiniLM-l6-v2"
 )
+
+# Postgres connection string
+DATABASE_URL = os.environ.get("DATABASE_URL")
