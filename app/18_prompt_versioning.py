@@ -5,7 +5,7 @@ from langchain import hub
 # Sample: https://smith.langchain.com/hub/glisteningocean/gais-email-outreach
 
 # Vary the version number to see different results as we continuously improve on our outreach prompt
-version = 3
+version = 0
 
 prompt_versions = [
     "glisteningocean/gais-email-outreach:87377fd7",
