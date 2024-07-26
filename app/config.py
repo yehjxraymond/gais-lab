@@ -16,7 +16,9 @@ llm_local = ChatOpenAI(
 # Openrouter LLM
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 llm_open_router = ChatOpenAI(
-    api_key=OPENROUTER_API_KEY, openai_api_base="https://openrouter.ai/api/v1/"
+    api_key=OPENROUTER_API_KEY,
+    openai_api_base="https://openrouter.ai/api/v1/",
+    # model="google/gemma-7b-it:free",
 )
 
 # Hugging Face Inference API
