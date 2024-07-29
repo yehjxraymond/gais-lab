@@ -7,7 +7,7 @@ search = DuckDuckGoSearchRun()
 def main():
     tools = [search]
     llm_with_tools = llm_open_router.bind_tools(tools, tool_choice="duckduckgo_search")
-    response = llm_with_tools.invoke("What's the weather in Singapore for the week?")
+    response = llm_with_tools.invoke("What's the latest version of Langchain and what are the new features?")
     print(response)
 
 if __name__ == "__main__":

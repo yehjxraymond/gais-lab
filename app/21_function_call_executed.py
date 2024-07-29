@@ -6,7 +6,7 @@ search = DuckDuckGoSearchRun()
 
 # Note that you will have to use OpenAI's model for the tools to work
 def main():
-    query = "What's the weather in Singapore for the week?"
+    query = "What's the latest version of Langchain and what are the new features?"
     messages = [HumanMessage(query)]
 
     tools = [search]
