@@ -1,4 +1,5 @@
-from config import llm_open_router, hf_embeddings
+from config import llm_open_router, hf_embeddings, DATABASE_URL
+from langchain_postgres import PGVector
 from langchain_core.messages import HumanMessage, ToolMessage, SystemMessage
 from langchain_core.tools import tool
 import pandas as pd
@@ -6,30 +7,24 @@ import numpy as np
 from typing import List
 import json
 
-
-NAIS_PICKLE = "./fixtures/nais.pkl"
+# Setup for the vector store
+vectorstore = PGVector(
+    embeddings=hf_embeddings,
+    collection_name="nais",
+    connection=DATABASE_URL,
+    use_jsonb=True,
+)
 
 @tool
 def document_search_tool(query: str) -> List[str]:
     """
-    Search for documents similar to the query by loading them from a pickle file,
+    Search for documents similar to the query in the vector store,
     and return top 5 matches.
     """
-    df = pd.read_pickle(NAIS_PICKLE)
-    documents = df.to_dict(orient='records')  # Change to convert DataFrame to list of dicts
-    document_embeddings = np.array(df['embedding'].tolist())
+    # Use the vector store to search for similar documents
+    results = vectorstore.similarity_search_with_score(query, 5)
     
-    query_embedding = hf_embeddings.embed_query(query)
-    top_results = find_top_k_similar(query_embedding, document_embeddings, num_results=5)
-    
-    return [json.dumps({"metadata": documents[index].get("source", {})}) + "\n" + documents[index]['content'] for index, _ in top_results]
-
-def find_top_k_similar(embedding, embeddings, num_results=5):
-    from scipy.spatial.distance import cosine
-    similarities = [1 - cosine(embedding, doc_emb) for doc_emb in embeddings]
-    top_k_indices = np.argsort(similarities)[-num_results:]
-    return [(index, similarities[index]) for index in reversed(top_k_indices)]
-
+    return [json.dumps({"metadata": doc.metadata}) + "\n" + doc.page_content for doc, _ in results]
 def main():
     query = "What resources are available to AI Startups in Singapore?"
     messages = [HumanMessage(query)]
@@ -49,7 +44,7 @@ def main():
         print(tool_response)
         messages.append(ToolMessage(tool_response, tool_call_id=ai_message.tool_calls[0]["id"]))
    
-    messages.append(SystemMessage("You have snippet of content from a report from Singapore National AI Strategy 2.0. Use information from the snippet to answer the question. Be sure to provide a detailed response."))
+    messages.append(SystemMessage("You have snippet of content from a report from Singapore National AI Strategy 2.0. Use information from the document to answer the question. Be sure to provide a detailed response and references."))
      
     # Final message to AI with the tool response
     final_response = llm_with_tools.invoke(messages)
