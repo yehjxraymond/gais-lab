@@ -4,9 +4,7 @@ import matplotlib.pyplot as plt
 from config import hf_embeddings
 import numpy as np
 from adjustText import adjust_text
-from scipy.spatial.distance import cosine
 
-# Assuming the document list is the same as before
 document = [
     "I learned being a solo SaaS founder isnt for me. Backstory- Im 24 and have ran probably 5+ businesses so far. I cant code and have always done service/product businesses. Never SaaS Recently i wanted to do a SaaS as I thought i had seen a big market opportunity. I posted in a discord that i was looking to get the MVP made, and after some interviews i found my person. So far it’s been great and hes done a phenomenal job. Today i asked the dev how much in salary would he need to do this full time. He said he cant’t because he had his own startup. This truthfully fucked me up because i am so used to being useful. I had to accept that being a solo SaaS founder would likely be the WORST thing i could be. Imagine me hiring a software engineer and then me, the ONLY founder, sitting in my office not writing a single piece of code. I’d lose my entire engineering team. Should I keep trying to do service/product businesses or bust my ass to find a technical co founder who wants to do this with me?",
     "How much are you spending on marketing? which channels? I am curious to learn how much you are spending on marketing as a SaaS startup? Which channels are you utilizing and how is the response from each one? At our startup, we are doing blog posts, guest posts, and partly Google Ads. All in all about $500 - $1k spend per month for generating new leads. We get a lot of clicks from Google (5% CTR) but actual conversion is quite slow and in many cases non-existent.",
@@ -19,65 +17,42 @@ document = [
 ]
 
 def embed_documents(documents):
+    # Assuming hf_embeddings.embed_query(doc) returns a NumPy array or a list
     embeddings = [hf_embeddings.embed_query(doc) for doc in documents]
+    # Convert list of arrays/lists into a single 2D NumPy array
     embeddings_array = np.stack(embeddings)
+    
     return embeddings_array
 
-def calculate_similarities(query_embedding, document_embeddings):
-    similarities = [1 - cosine(query_embedding, doc_emb) for doc_emb in document_embeddings]
-    return similarities
-
 def main():
-    st.title("Document Embedding Visualization and Search")
+    st.title("Document Embedding Visualization")
 
-    user_query = st.text_area("Enter your document/query here:", height=150)
-    search_button = st.button("Search")
+    # Embed all documents
+    document_embeddings = embed_documents(document)
 
-    if search_button and user_query:
-        # Embed user query
-        query_embedding = hf_embeddings.embed_query(user_query)
+    # Dynamically set perplexity to be less than the number of samples
+    n_samples = len(document)
+    perplexity_value = min(1, max(5, n_samples - 1))  # Example adjustment
 
-        # Embed all documents
-        document_embeddings = embed_documents(document)
+    # Reduce dimensions with t-SNE
+    tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity_value)
+    tsne_results = tsne.fit_transform(document_embeddings)  # This should now work without error
 
-        # Calculate similarities
-        similarities = calculate_similarities(query_embedding, document_embeddings)
+    # Plotting
+    fig, ax = plt.subplots()
+    ax.scatter(tsne_results[:, 0], tsne_results[:, 1])
 
-        # Get the indices of the top 2 most similar documents
-        top_2_indices = np.argsort(similarities)[-2:]
+    texts = []
+    for i, txt in enumerate(document):
+        texts.append(ax.text(tsne_results[i, 0], tsne_results[i, 1], f"Doc {i+1}"))
 
-        # Display the top 2 most similar documents
-        for index in reversed(top_2_indices):  # reversed to print the most similar first
-            st.write(f"Document {index + 1}: {document[index]}")
-            st.write(f"Similarity: {similarities[index]}\n")
+    # Use adjust_text to automatically adjust the labels
+    adjust_text(texts, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
 
-        # Combine user query embedding with document embeddings for t-SNE
-        combined_embeddings = np.vstack([query_embedding, document_embeddings])
-
-        # Dynamically set perplexity to be less than the number of samples
-        n_samples = len(combined_embeddings)
-        perplexity_value = min(1, max(5, n_samples - 1))
-
-        # Reduce dimensions with t-SNE
-        tsne = TSNE(n_components=2, random_state=42, perplexity=perplexity_value)
-        tsne_results = tsne.fit_transform(combined_embeddings)
-
-        # Plotting
-        fig, ax = plt.subplots()
-        ax.scatter(tsne_results[1:, 0], tsne_results[1:, 1], label="Documents")
-        ax.scatter(tsne_results[0, 0], tsne_results[0, 1], color="red", label="User Query")
-        ax.legend()
-
-        texts = [ax.text(tsne_results[i, 0], tsne_results[i, 1], f"Doc {i}") for i in range(1, len(document) + 1)]
-        texts.append(ax.text(tsne_results[0, 0], tsne_results[0, 1], "Query", color="red"))
-
-        # Use adjust_text to automatically adjust the labels
-        adjust_text(texts, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
-
-        st.pyplot(fig)
+    st.pyplot(fig)
 
 if __name__ == "__main__":
     main()
     
 # If you are facing the issue of adjustText not found, run the app with the full command
-# `python3 -m streamlit run app/07_streamlit_user_query.py`
+# `python3 -m streamlit run app/11_streamlit_embedding_visualisation.py`

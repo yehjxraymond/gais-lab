@@ -61,4 +61,4 @@ if __name__ == "__main__":
     
     
 # If you are facing the issue of adjustText not found, run the app with the full command
-# `python3 -m streamlit run app/11_joke_generator_streamlit.py`
+# `python3 -m streamlit run app/09_joke_generator_streamlit.py`
